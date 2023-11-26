@@ -5,7 +5,6 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 
-
 logging.basicConfig(level=logging.DEBUG)  # Set the logging level to DEBUG
 logger = logging.getLogger(__name__)
 
@@ -50,8 +49,13 @@ def fetch_data() -> pd.DataFrame:
     )
 
     return (
-        np.array(X_train),
-        np.array(X_test),
+        np.array(X_train).T,
+        np.array(X_test).T,
         np.array(y_train)[np.newaxis, :],
         np.array(y_test)[np.newaxis, :],
     )
+
+
+class Dataset:
+    def __init__(self) -> None:
+        self.X_train, self.X_test, self.y_train, self.y_test = fetch_data()
