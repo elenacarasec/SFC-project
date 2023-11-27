@@ -41,17 +41,16 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.nn = self._init_nn(seed=seed)
         self.nn_adam = self._init_nn(optimizer="Adam", seed=seed)
 
+        self.labelNumEpochsTrained.setText(f"Epochs trained: {self.nn.current_epoch}")
+        self.update_test_loss()
+
         # Create a Matplotlib canvas
         self.canvas = MplCanvas(self, width=5, height=4, dpi=100)
         self.matplotlibBox.addWidget(self.canvas)
         self.plot_graph()
 
     def plot_graph(self):
-        self.xdata = list(range(len(self.nn.train_cost)))
-        self.ydata1 = self.nn.train_cost
-        self.ydata2 = self.nn_adam.train_cost
         self.update_plot()
-
         self.show()
 
         # Setup a timer to trigger the redraw by calling update_plot.
@@ -61,7 +60,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.timer.start()
 
     def update_plot(self):
-        self.xdata = list(range(len(self.nn.train_cost)))
+        self.xdata = list(range(1, len(self.nn.train_cost) + 1))
         self.ydata1 = self.nn.train_cost
         self.ydata2 = self.nn_adam.train_cost
 
@@ -76,13 +75,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.canvas.axes.legend()
 
         # Adjust limits and aspect ratio for a tight layout
-        self.canvas.axes.set_xlim(left=0, right=len(self.xdata))
-        self.canvas.axes.set_ylim(bottom=0)
+        right_xlim = 2 if len(self.xdata) < 2 else len(self.xdata)
+        self.canvas.axes.set_xlim(left=1, right=right_xlim)
+        self.canvas.axes.set_ylim(ymin=0)
         self.canvas.axes.set_aspect(
             "auto"
-        )  # You can try 'equal' or 'auto' based on your preference
-
-        # Apply tight layout after all plotting commands
+        )
         self.canvas.fig.tight_layout()
 
         # Trigger the canvas to update and redraw.
@@ -93,7 +91,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.buttonStepBack.clicked.connect(self.step_back_button_clicked)
         self.buttonStepIn.clicked.connect(self.step_in_button_clicked)
         self.buttonRun.clicked.connect(self.run_button_clicked)
-        self.buttonCompute.clicked.connect(self.compute_button_clicked)
         self.buttonReset.clicked.connect(self.reset_button_clicked)
 
     def _init_nn(self, optimizer=None, seed=0):
@@ -117,8 +114,14 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.nn = self._init_nn(seed=seed)
         self.nn_adam = self._init_nn(optimizer="Adam", seed=seed)
 
+        self.labelNumEpochsTrained.setText(f"Epochs trained: {self.nn.current_epoch}")
+        self.update_test_loss()
+
     def step_back_button_clicked(self):
-        pass
+        self.nn.step_back()
+        self.nn_adam.step_back()
+        self.labelNumEpochsTrained.setText(f"Epochs trained: {self.nn.current_epoch}")
+        self.update_test_loss()
 
     def step_in_button_clicked(self):
         self.nn.train_epoch(self.dataset.X_train, self.dataset.y_train)
@@ -128,20 +131,24 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.nn_adam.current_epoch += 1
         self.labelNumEpochsTrained.setText(f"Epochs trained: {self.nn.current_epoch}")
 
+        self.update_test_loss()
+
+
     def run_button_clicked(self):
         logger.debug("Run clicked")
         self.nn.train(self.dataset.X_train, self.dataset.y_train, self.epochs)
         self.nn_adam.train(self.dataset.X_train, self.dataset.y_train, self.epochs)
         self.labelNumEpochsTrained.setText(f"Epochs trained: {self.nn.current_epoch}")
 
+        self.update_test_loss()
+
         logger.debug("Model trained")
 
-    def compute_button_clicked(self):
+    def update_test_loss(self):
         cost = self.nn.test(self.dataset.X_test, self.dataset.y_test)
+        self.labelBPLossValue.setText(f"{round(cost, 5)}")
         cost = self.nn_adam.test(self.dataset.X_test, self.dataset.y_test)
-        logger.debug(f"Cost = {cost}")
-
-        self.lineEdit.setText(f"{round(cost, 5)}")
+        self.labelBPAdamLossValue.setText(f"{round(cost, 5)}")
 
     def reset_button_clicked(self):
         seed = np.random.randint(low=0, high=(2**32 - 1))

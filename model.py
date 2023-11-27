@@ -1,3 +1,4 @@
+import copy
 import logging
 
 import numpy as np
@@ -25,8 +26,8 @@ class Network:
         self.layers_dim = layers_dim
         self.params = {}
         self.grads = {}
-
         self.alpha = alpha
+
         self.momentums = {}
         self.velocities = {}
         self.beta1 = beta1
@@ -42,6 +43,11 @@ class Network:
 
         self.current_epoch = 0
 
+        self.params_snapshot = []
+        self.grads_snapshot = []
+        self.momentums_snapshot = []
+        self.velocities_snapshot = []
+
     def _init_params(self, seed=0):
         np.random.seed(seed)
         for l in range(1, len(self.layers_dim)):
@@ -54,6 +60,33 @@ class Network:
             self.momentums["db" + str(l)] = np.zeros_like(self.params["b" + str(l)])
             self.velocities["dW" + str(l)] = np.zeros_like(self.params["W" + str(l)])
             self.velocities["db" + str(l)] = np.zeros_like(self.params["b" + str(l)])
+    
+    def _save_params_snapshot(self):
+        """Save a snapshot of the current parameters."""
+        self.params_snapshot.append(copy.deepcopy(self.params))
+        self.grads_snapshot.append(copy.deepcopy(self.grads))
+        self.momentums_snapshot.append(copy.deepcopy(self.momentums))
+        self.velocities_snapshot.append(copy.deepcopy(self.velocities))
+
+    def step_back(self):
+        """Revert the model to the state of the previous epoch."""
+        if len(self.params_snapshot) > 0:
+            self.params = copy.deepcopy(self.params_snapshot[-1])
+            self.grads = copy.deepcopy(self.grads_snapshot[-1])
+            self.momentums = copy.deepcopy(self.momentums_snapshot[-1])
+            self.velocities = copy.deepcopy(self.velocities_snapshot[-1])
+
+            self.params_snapshot.pop()
+            self.grads_snapshot.pop()
+            self.momentums_snapshot.pop()
+            self.velocities_snapshot.pop()
+
+            self.current_epoch -= 1
+            self.train_cost.pop()
+            self.test_cost.pop()
+            logger.info("Model reverted to the state of the previous epoch.")
+        else:
+            logger.warning("No snapshot available. Cannot step back.")
 
     def forward_propagate(self, X, params):
         caches = []
@@ -173,6 +206,7 @@ class Network:
         self.params = self.update_parameters(
             self.params, self.grads, self.alpha, self.current_epoch
         )
+        self._save_params_snapshot()
 
         cost = mse_cost(preds, targets)
         self.train_cost.append(cost)
