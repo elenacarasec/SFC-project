@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class Network:
-    """https://www.projectpro.io/article/back-propagation-algorithm/697"""
+    """Inspired by https://www.projectpro.io/article/back-propagation-algorithm/697"""
 
     def __init__(
         self,
@@ -130,7 +130,7 @@ class Network:
             )
 
     def update_parameters_with_adam(self, params, grads, learning_rate, t):
-        """https://machinelearningmastery.com/adam-optimization-from-scratch/"""
+        """Inspired by https://machinelearningmastery.com/adam-optimization-from-scratch/"""
         L = len(self.layers_dim) - 1
 
         for l in range(L):

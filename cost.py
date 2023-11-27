@@ -6,4 +6,4 @@ def mse_cost(preds, Y):
 
 
 def mse_cost_deriv(preds, Y):
-    return 2 * (preds - Y) / Y.shape[1]
+    return (preds - Y) / Y.shape[1]
