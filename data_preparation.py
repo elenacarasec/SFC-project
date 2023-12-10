@@ -38,12 +38,14 @@ def fetch_data() -> pd.DataFrame:
         "LSTAT",
         "MEDV",
     ]
-    scaled_df = scale_data(upload_data())
+    unscaled_df = upload_data()
+    scaled_df = scale_data(unscaled_df)
+    unscaled_df.columns = column_names
     scaled_df.columns = column_names
     logger.debug(f"\n{scaled_df.head()}")
     X_train, X_test, y_train, y_test = train_test_split(
         scaled_df.drop(columns=["MEDV"]),
-        scaled_df["MEDV"],
+        unscaled_df["MEDV"],
         test_size=0.3,
         random_state=42,
     )

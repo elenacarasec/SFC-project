@@ -146,9 +146,9 @@ class MainWindow(QMainWindow, Ui_MainWindow):
 
     def update_test_loss(self):
         cost = self.nn.test(self.dataset.X_test, self.dataset.y_test)
-        self.labelBPLossValue.setText(f"{round(cost, 5)}")
+        self.labelBPLossValue.setText(f"{round(cost, 4)}")
         cost = self.nn_adam.test(self.dataset.X_test, self.dataset.y_test)
-        self.labelBPAdamLossValue.setText(f"{round(cost, 5)}")
+        self.labelBPAdamLossValue.setText(f"{round(cost, 4)}")
 
     def reset_button_clicked(self):
         seed = np.random.randint(low=0, high=(2**32 - 1))
